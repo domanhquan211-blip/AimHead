@@ -164,7 +164,7 @@ static SwipeVector computeVector(CGPoint from, CGPoint to) {
     v.dx        = to.x - from.x;
     v.dy        = to.y - from.y;           // negative = upward in UIKit
     v.magnitude = sqrtf(v.dx * v.dx + v.dy * v.dy);
-    v.isUpward  = (v.dy < 0) && (fabsf(v.dy) > fabsf(v.dx)); // vertical-dominant
+    v.isUpward  = (v.dy < 0) && (fabs(v.dy) > fabs(v.dx)); // vertical-dominant
     v.exceedsThreshold = v.magnitude > SWIPE_MIN_DISTANCE;
     return v;
 }
