@@ -55,7 +55,7 @@ jobs:
 
       - name: Build package
         run: |
-          make package \
+          make iphone:clang:16.5:14.0 \
             FINALPACKAGE=1 \
             THEOS_PACKAGE_SCHEME=rootless \
             STRIP=1 \
