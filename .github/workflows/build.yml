@@ -1,0 +1,76 @@
+name: Build SwipeOffsetPatcher
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  THEOS: ${{ github.workspace }}/theos
+  THEOS_DEVICE_IP: ${{ secrets.THEOS_DEVICE_IP }}
+  THEOS_DEVICE_PORT: ${{ secrets.THEOS_DEVICE_PORT || 22 }}
+
+jobs:
+  build:
+    name: Build Dylib
+    runs-on: macos-12
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Theos
+        id: cache-theos
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.THEOS }}
+          key: theos-${{ hashFiles('.github/workflows/build.yml') }}
+          restore-keys: theos-
+
+      - name: Setup Theos
+        if: steps.cache-theos.outputs.cache-hit != 'true'
+        run: |
+          git clone --recursive https://github.com/theos/theos.git $THEOS
+          git -C $THEOS submodule update --init --recursive
+
+      - name: Cache iOS SDKs
+        id: cache-sdk
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.THEOS }}/sdks
+          key: sdks-ios16.5
+
+      - name: Download iOS 16.5 SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL \
+            "https://github.com/theos/sdks/archive/refs/heads/master.tar.gz" | \
+            tar xz -C /tmp
+          mkdir -p $THEOS/sdks
+          mv /tmp/sdks-master/iPhoneOS16.5.sdk $THEOS/sdks/
+
+      - name: Build package
+        run: |
+          make package \
+            FINALPACKAGE=1 \
+            THEOS_PACKAGE_SCHEME=rootless \
+            STRIP=1 \
+            DEBUG=0
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SwipeOffsetPatcher-${{ github.sha }}
+          path: packages/*.deb
+          retention-days: 14
+
+      - name: Upload raw dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: SwipeOffsetPatcher.dylib-${{ github.sha }}
+          path: .theos/obj/debug/*.dylib
+          retention-days: 14
