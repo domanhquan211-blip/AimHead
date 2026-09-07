@@ -15,7 +15,7 @@ env:
 jobs:
   build:
     name: Build Dylib
-    runs-on: macos-12
+    runs-on: macos-14
 
     steps:
       - name: Checkout source
