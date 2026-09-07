@@ -53,6 +53,9 @@ jobs:
           mkdir -p $THEOS/sdks
           mv /tmp/sdks-master/iPhoneOS16.5.sdk $THEOS/sdks/
 
+      - name: Install Dependencies
+        run: |
+        brew install ldid
       - name: Build package
         run: |
           make package \
